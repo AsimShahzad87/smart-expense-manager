@@ -59,3 +59,26 @@ class AccountRepository:
         db.refresh(account)
 
         return account
+
+
+    @staticmethod
+    def get_active_by_user(
+        db: Session,
+        user_id: UUID,
+    ) -> list[Account]:
+        statement = (
+            select(Account)
+            .where(
+                Account.user_id == user_id,
+                Account.is_active.is_(True),
+            )
+            .order_by(
+                Account.created_at.asc()
+            )
+        )
+
+        return list(
+            db.execute(statement)
+            .scalars()
+            .all()
+        )

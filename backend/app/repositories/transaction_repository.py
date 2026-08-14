@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.enums import TransactionType
 from app.models.transaction import Transaction
+from datetime import datetime
 
 
 class TransactionRepository:
@@ -156,6 +157,81 @@ class TransactionRepository:
             )
         ).where(
             Transaction.user_id == user_id,
+            Transaction.deleted_at.is_(None),
+        )
+
+        return db.execute(
+            statement
+        ).scalar_one()
+
+
+    @staticmethod
+    def get_monthly_income(
+        db: Session,
+        user_id: UUID,
+        start_date: datetime,
+        end_date: datetime,
+    ):
+        statement = select(
+            func.coalesce(
+                func.sum(Transaction.amount),
+                0,
+            )
+        ).where(
+            Transaction.user_id == user_id,
+            Transaction.type == TransactionType.INCOME,
+            Transaction.transaction_date >= start_date,
+            Transaction.transaction_date < end_date,
+            Transaction.deleted_at.is_(None),
+        )
+
+        return db.execute(
+            statement
+        ).scalar_one()
+
+
+    @staticmethod
+    def get_monthly_expenses(
+        db: Session,
+        user_id: UUID,
+        start_date: datetime,
+        end_date: datetime,
+    ):
+        statement = select(
+            func.coalesce(
+                func.sum(Transaction.amount),
+                0,
+            )
+        ).where(
+            Transaction.user_id == user_id,
+            Transaction.type == TransactionType.EXPENSE,
+            Transaction.transaction_date >= start_date,
+            Transaction.transaction_date < end_date,
+            Transaction.deleted_at.is_(None),
+        )
+
+        return db.execute(
+            statement
+        ).scalar_one()
+
+
+    @staticmethod
+    def get_monthly_refunds(
+        db: Session,
+        user_id: UUID,
+        start_date: datetime,
+        end_date: datetime,
+    ):
+        statement = select(
+            func.coalesce(
+                func.sum(Transaction.amount),
+                0,
+            )
+        ).where(
+            Transaction.user_id == user_id,
+            Transaction.type == TransactionType.REFUND,
+            Transaction.transaction_date >= start_date,
+            Transaction.transaction_date < end_date,
             Transaction.deleted_at.is_(None),
         )
 
