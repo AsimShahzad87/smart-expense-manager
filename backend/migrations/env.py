@@ -23,6 +23,7 @@ config.set_main_option(
     database_url.replace("%", "%%"),
 )
 
+import app.models
 
 # Alembic uses this metadata to detect schema changes
 target_metadata = Base.metadata
