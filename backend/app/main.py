@@ -3,7 +3,9 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.database.connection import engine
+
 from app.api.v1.auth import router as auth_router
+from app.api.v1.accounts import router as accounts_router
 
 
 app = FastAPI(
@@ -12,8 +14,15 @@ app = FastAPI(
     description="Backend API for Smart Expense Manager",
 )
 
+
 app.include_router(
     auth_router,
+    prefix="/api/v1",
+)
+
+
+app.include_router(
+    accounts_router,
     prefix="/api/v1",
 )
 
