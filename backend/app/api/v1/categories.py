@@ -6,31 +6,31 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.database.connection import get_db
 from app.models.user import User
-from app.schemas.account import (
-    AccountCreate,
-    AccountResponse,
-    AccountUpdate,
+from app.schemas.category import (
+    CategoryCreate,
+    CategoryResponse,
+    CategoryUpdate,
 )
-from app.services.account_service import AccountService
+from app.services.category_service import CategoryService
 
 
 router = APIRouter(
-    prefix="/accounts",
-    tags=["Accounts"],
+    prefix="/categories",
+    tags=["Categories"],
 )
 
 
 @router.post(
     "",
-    response_model=AccountResponse,
+    response_model=CategoryResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_account(
-    request: AccountCreate,
+def create_category(
+    request: CategoryCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.create_account(
+    return CategoryService.create_category(
         db,
         current_user,
         request,
@@ -39,63 +39,63 @@ def create_account(
 
 @router.get(
     "",
-    response_model=list[AccountResponse],
+    response_model=list[CategoryResponse],
 )
-def get_accounts(
+def get_categories(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.get_accounts(
+    return CategoryService.get_categories(
         db,
         current_user,
     )
 
 
 @router.get(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{category_id}",
+    response_model=CategoryResponse,
 )
-def get_account(
-    account_id: UUID,
+def get_category(
+    category_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.get_account(
+    return CategoryService.get_category(
         db,
         current_user,
-        account_id,
+        category_id,
     )
 
 
 @router.patch(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{category_id}",
+    response_model=CategoryResponse,
 )
-def update_account(
-    account_id: UUID,
-    request: AccountUpdate,
+def update_category(
+    category_id: UUID,
+    request: CategoryUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.update_account(
+    return CategoryService.update_category(
         db,
         current_user,
-        account_id,
+        category_id,
         request,
     )
 
 
 @router.delete(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{category_id}",
+    response_model=CategoryResponse,
 )
-def deactivate_account(
-    account_id: UUID,
+def deactivate_category(
+    category_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.deactivate_account(
+    return CategoryService.deactivate_category(
         db,
         current_user,
-        account_id,
+        category_id,
     )

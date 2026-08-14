@@ -6,31 +6,31 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.database.connection import get_db
 from app.models.user import User
-from app.schemas.account import (
-    AccountCreate,
-    AccountResponse,
-    AccountUpdate,
+from app.schemas.transaction import (
+    TransactionCreate,
+    TransactionResponse,
+    TransactionUpdate,
 )
-from app.services.account_service import AccountService
+from app.services.transaction_service import TransactionService
 
 
 router = APIRouter(
-    prefix="/accounts",
-    tags=["Accounts"],
+    prefix="/transactions",
+    tags=["Transactions"],
 )
 
 
 @router.post(
     "",
-    response_model=AccountResponse,
+    response_model=TransactionResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_account(
-    request: AccountCreate,
+def create_transaction(
+    request: TransactionCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.create_account(
+    return TransactionService.create_transaction(
         db,
         current_user,
         request,
@@ -39,63 +39,63 @@ def create_account(
 
 @router.get(
     "",
-    response_model=list[AccountResponse],
+    response_model=list[TransactionResponse],
 )
-def get_accounts(
+def get_transactions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.get_accounts(
+    return TransactionService.get_transactions(
         db,
         current_user,
     )
 
 
 @router.get(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{transaction_id}",
+    response_model=TransactionResponse,
 )
-def get_account(
-    account_id: UUID,
+def get_transaction(
+    transaction_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.get_account(
+    return TransactionService.get_transaction(
         db,
         current_user,
-        account_id,
+        transaction_id,
     )
 
 
 @router.patch(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{transaction_id}",
+    response_model=TransactionResponse,
 )
-def update_account(
-    account_id: UUID,
-    request: AccountUpdate,
+def update_transaction(
+    transaction_id: UUID,
+    request: TransactionUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.update_account(
+    return TransactionService.update_transaction(
         db,
         current_user,
-        account_id,
+        transaction_id,
         request,
     )
 
 
 @router.delete(
-    "/{account_id}",
-    response_model=AccountResponse,
+    "/{transaction_id}",
+    response_model=TransactionResponse,
 )
-def deactivate_account(
-    account_id: UUID,
+def delete_transaction(
+    transaction_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return AccountService.deactivate_account(
+    return TransactionService.delete_transaction(
         db,
         current_user,
-        account_id,
+        transaction_id,
     )
