@@ -12,6 +12,7 @@ from app.schemas.account import (
     AccountUpdate,
 )
 from app.services.account_service import AccountService
+from app.schemas.account import AccountBalanceResponse
 
 
 router = APIRouter(
@@ -61,6 +62,22 @@ def get_account(
     current_user: User = Depends(get_current_user),
 ):
     return AccountService.get_account(
+        db,
+        current_user,
+        account_id,
+    )
+
+
+@router.get(
+    "/{account_id}/balance",
+    response_model=AccountBalanceResponse,
+)
+def get_account_balance(
+    account_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return AccountService.get_account_balance(
         db,
         current_user,
         account_id,

@@ -97,3 +97,21 @@ class AccountResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+
+class AccountBalanceResponse(BaseModel):
+    account_id: UUID
+    account_name: str
+
+    account_type: AccountType
+    account_nature: AccountNature
+
+    currency: str
+
+    opening_balance: Decimal
+
+    current_balance: Decimal | None = None
+    outstanding_balance: Decimal | None = None
+
+    credit_limit: Decimal | None = None
+    available_limit: Decimal | None = None
