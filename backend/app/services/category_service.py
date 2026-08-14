@@ -21,10 +21,11 @@ class CategoryService:
         name = request.name.strip()
 
         existing_category = (
-            CategoryRepository.get_user_category_by_name(
+            CategoryRepository.get_available_category_by_name_and_type(
                 db,
                 current_user.id,
                 name,
+                request.category_type,
             )
         )
 
@@ -108,10 +109,11 @@ class CategoryService:
             new_name = update_data["name"].strip()
 
             existing_category = (
-                CategoryRepository.get_user_category_by_name(
+                CategoryRepository.get_available_category_by_name_and_type(
                     db,
                     current_user.id,
                     new_name,
+                    request.category_type,
                 )
             )
 

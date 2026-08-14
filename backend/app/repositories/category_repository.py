@@ -4,6 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.models.category import Category
+from app.models.enums import CategoryType
 
 
 class CategoryRepository:
@@ -29,10 +30,11 @@ class CategoryRepository:
         statement = (
             select(Category)
             .where(
+                Category.is_active.is_(True),
                 or_(
                     Category.is_system.is_(True),
                     Category.user_id == user_id,
-                )
+                ),
             )
             .order_by(
                 Category.category_type,
@@ -41,7 +43,9 @@ class CategoryRepository:
         )
 
         return list(
-            db.execute(statement).scalars().all()
+            db.execute(statement)
+            .scalars()
+            .all()
         )
 
     @staticmethod
@@ -64,6 +68,27 @@ class CategoryRepository:
         ).scalar_one_or_none()
 
     @staticmethod
+    def get_available_category_by_name_and_type(
+        db: Session,
+        user_id: UUID,
+        name: str,
+        category_type: CategoryType,
+    ) -> Category | None:
+
+        statement = select(Category).where(
+            or_(
+                Category.is_system.is_(True),
+                Category.user_id == user_id,
+            ),
+            Category.name.ilike(name.strip()),
+            Category.category_type == category_type,
+        )
+
+        return db.execute(
+            statement
+        ).scalars().first()
+
+    @staticmethod
     def get_user_category_by_name(
         db: Session,
         user_id: UUID,
@@ -72,12 +97,12 @@ class CategoryRepository:
 
         statement = select(Category).where(
             Category.user_id == user_id,
-            Category.name == name,
+            Category.name.ilike(name.strip()),
         )
 
         return db.execute(
             statement
-        ).scalar_one_or_none()
+        ).scalars().first()
 
     @staticmethod
     def save(
