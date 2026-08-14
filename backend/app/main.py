@@ -1,8 +1,13 @@
 from fastapi import FastAPI
+from sqlalchemy import text
+
+from app.core.config import settings
+from app.database.connection import engine
+
 
 app = FastAPI(
-    title="Smart Expense Manager API",
-    version="0.1.0",
+    title=settings.app_name,
+    version=settings.app_version,
     description="Backend API for Smart Expense Manager",
 )
 
@@ -18,4 +23,15 @@ def root():
 def health():
     return {
         "status": "UP"
+    }
+
+
+@app.get("/health/database")
+def database_health():
+    with engine.connect() as connection:
+        connection.execute(text("SELECT 1"))
+
+    return {
+        "status": "UP",
+        "database": "CONNECTED"
     }
