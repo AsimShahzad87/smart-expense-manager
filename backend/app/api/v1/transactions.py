@@ -12,7 +12,12 @@ from app.schemas.transaction import (
     TransactionUpdate,
 )
 from app.services.transaction_service import TransactionService
+from datetime import date
+from uuid import UUID
 
+from fastapi import APIRouter, Depends, Query
+from app.models.enums import TransactionType
+from app.schemas.transaction import TransactionPageResponse
 
 router = APIRouter(
     prefix="/transactions",
@@ -39,15 +44,47 @@ def create_transaction(
 
 @router.get(
     "",
-    response_model=list[TransactionResponse],
+    response_model=TransactionPageResponse,
 )
 def get_transactions(
+    page: int = Query(
+        default=1,
+        ge=1,
+    ),
+    page_size: int = Query(
+        default=20,
+        ge=1,
+        le=100,
+    ),
+    transaction_type: TransactionType | None = Query(
+        default=None,
+        alias="type",
+    ),
+    account_id: UUID | None = Query(
+        default=None,
+    ),
+    category_id: UUID | None = Query(
+        default=None,
+    ),
+    date_from: date | None = Query(
+        default=None,
+    ),
+    date_to: date | None = Query(
+        default=None,
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return TransactionService.get_transactions(
-        db,
-        current_user,
+        db=db,
+        current_user=current_user,
+        page=page,
+        page_size=page_size,
+        transaction_type=transaction_type,
+        account_id=account_id,
+        category_id=category_id,
+        date_from=date_from,
+        date_to=date_to,
     )
 
 

@@ -1,12 +1,11 @@
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.enums import TransactionType
 from app.models.transaction import Transaction
-from datetime import datetime
-
 
 class TransactionRepository:
 
@@ -22,26 +21,83 @@ class TransactionRepository:
         return transaction
 
     @staticmethod
-    def get_all_by_user(
+    def get_filtered_by_user(
         db: Session,
         user_id: UUID,
-    ) -> list[Transaction]:
-        statement = (
-            select(Transaction)
-            .where(
-                Transaction.user_id == user_id,
-                Transaction.deleted_at.is_(None),
+        page: int,
+        page_size: int,
+        transaction_type: TransactionType | None = None,
+        account_id: UUID | None = None,
+        category_id: UUID | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+    ) -> tuple[list[Transaction], int]:
+
+        filters = [
+            Transaction.user_id == user_id,
+            Transaction.deleted_at.is_(None),
+        ]
+
+        if transaction_type is not None:
+            filters.append(
+                Transaction.type == transaction_type
             )
-            .order_by(
-                Transaction.transaction_date.desc()
+
+        if account_id is not None:
+            filters.append(
+                or_(
+                    Transaction.source_account_id == account_id,
+                    Transaction.destination_account_id == account_id,
+                )
             )
+
+        if category_id is not None:
+            filters.append(
+                Transaction.category_id == category_id
+            )
+
+        if date_from is not None:
+            filters.append(
+                Transaction.transaction_date >= date_from
+            )
+
+        if date_to is not None:
+            filters.append(
+                Transaction.transaction_date < date_to
+            )
+
+        # Count matching transactions
+        count_statement = (
+            select(func.count(Transaction.id))
+            .where(*filters)
         )
 
-        return list(
+        total_items = db.execute(
+            count_statement
+        ).scalar_one()
+
+        # Calculate pagination offset
+        offset = (page - 1) * page_size
+
+        # Retrieve requested page
+        statement = (
+            select(Transaction)
+            .where(*filters)
+            .order_by(
+                Transaction.transaction_date.desc(),
+                Transaction.created_at.desc(),
+            )
+            .offset(offset)
+            .limit(page_size)
+        )
+
+        transactions = list(
             db.execute(statement)
             .scalars()
             .all()
         )
+
+        return transactions, total_items
 
     @staticmethod
     def get_by_id_and_user(

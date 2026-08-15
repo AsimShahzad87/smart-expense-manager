@@ -101,3 +101,13 @@ class TransactionResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+
+class TransactionPageResponse(BaseModel):
+    items: list[TransactionResponse]
+
+    page: int
+    page_size: int
+
+    total_items: int
+    total_pages: int

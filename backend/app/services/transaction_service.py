@@ -1,4 +1,6 @@
-from datetime import datetime, timezone
+import math
+
+from datetime import date, datetime, time, timedelta, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -12,11 +14,14 @@ from app.models.enums import (
 )
 from app.models.transaction import Transaction
 from app.models.user import User
+
 from app.repositories.account_repository import AccountRepository
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.transaction_repository import TransactionRepository
+
 from app.schemas.transaction import (
     TransactionCreate,
+    TransactionPageResponse,
     TransactionUpdate,
 )
 
@@ -307,16 +312,69 @@ class TransactionService:
             db,
             transaction,
         )
-
     @staticmethod
     def get_transactions(
         db: Session,
         current_user: User,
-    ) -> list[Transaction]:
+        page: int,
+        page_size: int,
+        transaction_type: TransactionType | None = None,
+        account_id: UUID | None = None,
+        category_id: UUID | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> TransactionPageResponse:
 
-        return TransactionRepository.get_all_by_user(
-            db,
-            current_user.id,
+        if date_from is not None and date_to is not None:
+            if date_from > date_to:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="date_from cannot be greater than date_to",
+                )
+
+        start_datetime = None
+        end_datetime = None
+
+        if date_from is not None:
+            start_datetime = datetime.combine(
+                date_from,
+                time.min,
+                tzinfo=timezone.utc,
+            )
+
+        if date_to is not None:
+            end_datetime = datetime.combine(
+                date_to + timedelta(days=1),
+                time.min,
+                tzinfo=timezone.utc,
+            )
+
+        transactions, total_items = (
+            TransactionRepository.get_filtered_by_user(
+                db=db,
+                user_id=current_user.id,
+                page=page,
+                page_size=page_size,
+                transaction_type=transaction_type,
+                account_id=account_id,
+                category_id=category_id,
+                date_from=start_datetime,
+                date_to=end_datetime,
+            )
+        )
+
+        total_pages = (
+            math.ceil(total_items / page_size)
+            if total_items > 0
+            else 0
+        )
+
+        return TransactionPageResponse(
+            items=transactions,
+            page=page,
+            page_size=page_size,
+            total_items=total_items,
+            total_pages=total_pages,
         )
 
     @staticmethod
